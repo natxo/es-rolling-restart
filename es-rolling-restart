@@ -1,0 +1,41 @@
+#!/usr/bin/python
+
+import argparse
+import os.path
+import requests
+
+user = "elastic"
+pwd = "changeme"
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-m", "--masternode",
+                    help="name Elastisearch node we consider to be master")
+parser.add_argument("-n", "--nodelist",
+                    help="file containing list of ES datanodes")
+
+args = parser.parse_args()
+
+if not args.masternode:
+    parser.print_help()
+    quit(1)
+
+if not args.nodelist:
+    print "please specify a nodelist file"
+    parser.print_help()
+    quit(1)
+
+if not os.path.isfile(args.nodelist):
+    print "please specify a valid file"
+    parser.print_help()
+    quit(1)
+
+# timeout 5 secons, don't wait for ever
+r = requests.get(args.masternode, auth=(user, pwd), timeout=5)
+
+# die on error
+r.raise_for_status()
+
+print r.headers
+
+print r.url
+
