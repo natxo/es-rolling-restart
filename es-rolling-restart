@@ -47,6 +47,7 @@ def signal_handler(signum, stack):
 signal.signal( signal.SIGHUP, signal_handler)
 signal.signal( signal.SIGINT, signal_handler)
 
+# wait until cluster health status is green
 while True: 
     try:
         cls_hlth = get_health(args.masternode)
@@ -58,20 +59,5 @@ while True:
         time.sleep(5)
     except Exception as e:
         print e
-
-
-#f = open(args.nodelist, "r")
-#for line in f:
-#    line = line.strip()
-#    get_req(line)
-
-
-# timeout 5 secons, don't wait for ever
-#r = requests.get(args.masternode, auth=(user, pwd), timeout=5)
-
-# die on error
-#r.raise_for_status()
-##
-#print "The requested url is %s"  % r.url
 
 
