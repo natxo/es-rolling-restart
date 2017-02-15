@@ -3,6 +3,8 @@
 import argparse
 import os.path
 import requests
+import json
+import time, signal, sys
 
 user = "elastic"
 pwd = "changeme"
@@ -29,13 +31,47 @@ if not os.path.isfile(args.nodelist):
     parser.print_help()
     quit(1)
 
+def get_req(uri):
+    r = requests.get(uri, auth=(user, pwd), timeout=5)
+    r.raise_for_status()
+
+def get_health(master):
+    r = requests.get(master + "/_cluster/health", auth=(user, pwd), timeout=5)
+    r.raise_for_status()
+    return json.loads(r.content)
+
+def signal_handler(signum, stack):
+    sys.exit(0)
+
+# exit on SIGINT/SIGHUP
+signal.signal( signal.SIGHUP, signal_handler)
+signal.signal( signal.SIGINT, signal_handler)
+
+while True: 
+    try:
+        cls_hlth = get_health(args.masternode)
+        if cls_hlth['status'] == 'green':
+            break
+        print "Status: ", cls_hlth['status']
+        print "Number of nodes: ", cls_hlth['number_of_nodes']
+        print "sleeping 5 seconds..."
+        time.sleep(5)
+    except Exception as e:
+        print e
+
+
+#f = open(args.nodelist, "r")
+#for line in f:
+#    line = line.strip()
+#    get_req(line)
+
+
 # timeout 5 secons, don't wait for ever
-r = requests.get(args.masternode, auth=(user, pwd), timeout=5)
+#r = requests.get(args.masternode, auth=(user, pwd), timeout=5)
 
 # die on error
-r.raise_for_status()
+#r.raise_for_status()
+##
+#print "The requested url is %s"  % r.url
 
-print r.headers
-
-print r.url
 
