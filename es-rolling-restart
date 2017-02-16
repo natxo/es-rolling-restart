@@ -12,8 +12,8 @@ pwd = "changeme"
 parser = argparse.ArgumentParser()
 parser.add_argument("-m", "--masternode",
                     help="name Elastisearch node we consider to be master")
-parser.add_argument("-n", "--nodelist",
-                    help="file containing list of ES datanodes")
+#parser.add_argument("-n", "--nodelist",
+#                    help="file containing list of ES datanodes")
 
 args = parser.parse_args()
 
@@ -21,15 +21,15 @@ if not args.masternode:
     parser.print_help()
     quit(1)
 
-if not args.nodelist:
-    print "please specify a nodelist file"
-    parser.print_help()
-    quit(1)
-
-if not os.path.isfile(args.nodelist):
-    print "please specify a valid file"
-    parser.print_help()
-    quit(1)
+#if not args.nodelist:
+#    print "please specify a nodelist file"
+#    parser.print_help()
+#    quit(1)
+#
+#if not os.path.isfile(args.nodelist):
+#    print "please specify a valid file"
+#    parser.print_help()
+#    quit(1)
 
 def get_req(uri):
     r = requests.get(uri, auth=(user, pwd), timeout=5)
@@ -43,10 +43,26 @@ def get_health(master):
 def signal_handler(signum, stack):
     sys.exit(0)
 
+def get_nodes(master):
+    r = requests.get(master + "/_nodes", auth=(user, pwd), timeout=5)
+    r.raise_for_status()
+    return json.loads(r.content)
+
 # exit on SIGINT/SIGHUP
 signal.signal( signal.SIGHUP, signal_handler)
 signal.signal( signal.SIGINT, signal_handler)
 
+nodes = get_nodes(args.masternode)
+
+#for key, value in nodes['nodes'].iteritems():
+for key, value in nodes['nodes'].items():
+    if not value['roles']:
+        print "NO roles", value['name']
+    else:
+        print "YES roles", value['name'], value['roles']
+    #print value['name']
+
+time.sleep(60)
 # wait until cluster health status is green
 while True: 
     try:
