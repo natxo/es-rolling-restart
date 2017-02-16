@@ -9,6 +9,8 @@ import time, signal, sys
 user = "elastic"
 pwd = "changeme"
 
+#datanodes = []
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-m", "--masternode",
                     help="name Elastisearch node we consider to be master")
@@ -31,23 +33,26 @@ def get_health(master):
 def signal_handler(signum, stack):
     sys.exit(0)
 
+# retrieve list of nodes, return list of datanodes
 def get_nodes(master):
     r = requests.get(master + "/_nodes", auth=(user, pwd), timeout=5)
     r.raise_for_status()
-    return json.loads(r.content)
+    nodes = json.loads(r.content)
+    datanodes = []
+    for key, value in nodes['nodes'].items():
+        if not value['roles']:
+            continue
+        else:
+            datanodes.append(value['name'])
+    datanodes.sort()
+    return datanodes
 
 # exit on SIGINT/SIGHUP
 signal.signal( signal.SIGHUP, signal_handler)
 signal.signal( signal.SIGINT, signal_handler)
 
-nodes = get_nodes(args.masternode)
-
-#for key, value in nodes['nodes'].iteritems():
-for key, value in nodes['nodes'].items():
-    if not value['roles']:
-        print "NO roles", value['name']
-    else:
-        print "YES roles", value['name'], value['roles']
+datanodes = get_nodes(args.masternode)
+print "Datanodes in cluster: ", datanodes
 
 time.sleep(60)
 
