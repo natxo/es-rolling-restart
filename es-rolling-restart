@@ -19,10 +19,6 @@ if not args.masternode:
     parser.print_help()
     quit(1)
 
-def get_req(uri):
-    r = requests.get(uri, auth=(user, pwd), timeout=5)
-    r.raise_for_status()
-
 def get_health(master):
     try:
         r = requests.get(master + "/_cluster/health", auth=(user, pwd), timeout=5)
@@ -60,7 +56,7 @@ signal.signal( signal.SIGINT, signal_handler)
 datanodes = get_nodes(args.masternode)
 print "Datanodes in cluster: ", datanodes
 
-time.sleep(60)
+#time.sleep(60)
 
 # wait until cluster health status is green
 while True: 
@@ -70,6 +66,8 @@ while True:
             break
         print "Status: ", cls_hlth['status']
         print "Number of nodes: ", cls_hlth['number_of_nodes']
+        print "unassigned_shards", cls_hlth['unassigned_shards']
+        print "initializing_shards", cls_hlth['initializing_shards']
         print "sleeping 5 seconds..."
         time.sleep(5)
     except Exception as e:
