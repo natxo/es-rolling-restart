@@ -9,8 +9,6 @@ import time, signal, sys
 user = "elastic"
 pwd = "changeme"
 
-#datanodes = []
-
 parser = argparse.ArgumentParser()
 parser.add_argument("-m", "--masternode",
                     help="name Elastisearch node we consider to be master")
@@ -26,26 +24,34 @@ def get_req(uri):
     r.raise_for_status()
 
 def get_health(master):
-    r = requests.get(master + "/_cluster/health", auth=(user, pwd), timeout=5)
-    r.raise_for_status()
-    return json.loads(r.content)
+    try:
+        r = requests.get(master + "/_cluster/health", auth=(user, pwd), timeout=5)
+        r.raise_for_status()
+        return json.loads(r.content)
+    except Exception as e:
+        print e
+        sys.exit(1)
 
 def signal_handler(signum, stack):
     sys.exit(0)
 
 # retrieve list of nodes, return list of datanodes
 def get_nodes(master):
-    r = requests.get(master + "/_nodes", auth=(user, pwd), timeout=5)
-    r.raise_for_status()
-    nodes = json.loads(r.content)
-    datanodes = []
-    for key, value in nodes['nodes'].items():
-        if not value['roles']:
-            continue
-        else:
-            datanodes.append(value['name'])
-    datanodes.sort()
-    return datanodes
+    try:
+        r = requests.get(master + "/_nodes", auth=(user, pwd), timeout=5)
+        r.raise_for_status()
+        nodes = json.loads(r.content)
+        datanodes = []
+        for key, value in nodes['nodes'].items():
+            if not value['roles']:
+                continue
+            else:
+                datanodes.append(value['name'])
+        datanodes.sort()
+        return datanodes
+    except Exception as e:
+        print e
+        sys.exit(1)
 
 # exit on SIGINT/SIGHUP
 signal.signal( signal.SIGHUP, signal_handler)
