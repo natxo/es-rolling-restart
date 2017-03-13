@@ -42,12 +42,29 @@ def get_nodes(master):
             if not value['roles']:
                 continue
             else:
-                datanodes.append(value['name'])
+                #datanodes.append(value['name'])
+                datanodes.append(value['ip'])
         datanodes.sort()
         return datanodes
     except Exception as e:
         print e
         sys.exit(1)
+
+# wait until cluster health status is green
+def is_cluster_green():
+    while True: 
+        try:
+            cls_hlth = get_health(args.masternode)
+            if cls_hlth['status'] == 'green':
+                break
+            print "Status: ", cls_hlth['status']
+            print "Number of nodes: ", cls_hlth['number_of_nodes']
+            print "unassigned_shards", cls_hlth['unassigned_shards']
+            print "initializing_shards", cls_hlth['initializing_shards']
+            print "sleeping 5 seconds..."
+            time.sleep(5)
+        except Exception as e:
+            print e
 
 # exit on SIGINT/SIGHUP
 signal.signal( signal.SIGHUP, signal_handler)
@@ -55,22 +72,11 @@ signal.signal( signal.SIGINT, signal_handler)
 
 datanodes = get_nodes(args.masternode)
 print "Datanodes in cluster: ", datanodes
+for node in datanodes:
+    is_cluster_green
+    print "ssh root@" + node + " \"apt-get update && apt-get upgrade && reboot\""
+    is_cluster_green
+    print "next"
 
 #time.sleep(60)
-
-# wait until cluster health status is green
-while True: 
-    try:
-        cls_hlth = get_health(args.masternode)
-        if cls_hlth['status'] == 'green':
-            break
-        print "Status: ", cls_hlth['status']
-        print "Number of nodes: ", cls_hlth['number_of_nodes']
-        print "unassigned_shards", cls_hlth['unassigned_shards']
-        print "initializing_shards", cls_hlth['initializing_shards']
-        print "sleeping 5 seconds..."
-        time.sleep(5)
-    except Exception as e:
-        print e
-
 
